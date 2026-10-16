@@ -1,0 +1,44 @@
+name: Deploy TMDB app to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Repository is published at https://idiotot.github.io/tmdb-actions-pages/
+env:
+  BASE_URL: '/tmdb-actions-pages/'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: github-pages
+    steps:
+      - name: Download Pages artifact
+        uses: actions/download-pages-artifact@v3
+        with:
+          path: ./_site
+      - uses: actions/configure-pages@v5
+      - uses: actions/deploy-pages@v4
